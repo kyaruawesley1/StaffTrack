@@ -1,64 +1,91 @@
 <?php
 require_once __DIR__ . "/../config.php";
 
-if(!isset($_SESSION['user']) || $_SESSION['user']['role'] !== "HR") {
-    header("Location: login.php");
+if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== "HR") {
+    header("Location: ../public/login.php");
     exit;
 }
 
 $id = $_GET['id'] ?? null;
-if(!$id) { die("Employee ID required."); }
+if (!$id) {
+    die("Employee ID required.");
+}
 
 $employee = $pdo->prepare("SELECT * FROM employees WHERE id = ?");
 $employee->execute([$id]);
 $employee = $employee->fetch();
 
-if(!$employee) die("Employee not found.");
+if (!$employee) {
+    die("Employee not found.");
+}
 
 $departments = $pdo->query("SELECT * FROM departments")->fetchAll();
 
-if($_SERVER["REQUEST_METHOD"]=="POST"){
-    $name=$_POST['name']; $email=$_POST['email']; $phone=$_POST['phone'];
-    $department_id=$_POST['department']; $role=$_POST['role']; $date_joined=$_POST['date_joined'];
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    $name = $_POST['name'];
+    $email = $_POST['email'];
+    $phone = $_POST['phone'];
+    $department_id = $_POST['department'];
+    $role = $_POST['role'];
+    $date_joined = $_POST['date_joined'];
 
-    $stmt=$pdo->prepare("UPDATE employees SET name=?, email=?, phone=?, department_id=?, role=?, date_joined=? WHERE id=?");
-    $stmt->execute([$name,$email,$phone,$department_id,$role,$date_joined,$id]);
-    header("Location: employee_profile.php?id=".$id);
+    $stmt = $pdo->prepare("UPDATE employees SET name = ?, email = ?, phone = ?, department_id = ?, role = ?, date_joined = ? WHERE id = ?");
+    $stmt->execute([$name, $email, $phone, $department_id, $role, $date_joined, $id]);
+    header("Location: employee_profile.php?id=" . $id);
     exit;
 }
 ?>
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+  <meta charset="UTF-8">
   <title>Edit Employee</title>
-  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
 </head>
-<body class="bg-gray-100 p-6">
-  <h2 class="text-2xl font-bold mb-4">Edit Employee</h2>
-  <form method="post" class="bg-white p-6 rounded shadow max-w-lg">
-    <label>Name</label>
-    <input type="text" name="name" value="<?= $employee['name'] ?>" class="w-full border p-2 mb-3 rounded">
+<body>
+  <header>
+    <nav>
+      <ul>
+        <li><a href="dashboard.php">Dashboard</a></li>
+        <li><a href="../public/logout.php">Logout</a></li>
+      </ul>
+    </nav>
+  </header>
 
-    <label>Email</label>
-    <input type="email" name="email" value="<?= $employee['email'] ?>" class="w-full border p-2 mb-3 rounded">
+  <main>
+    <section>
+      <h1>Edit Employee</h1>
 
-    <label>Phone</label>
-    <input type="text" name="phone" value="<?= $employee['phone'] ?>" class="w-full border p-2 mb-3 rounded">
+      <form method="post">
+        <label for="name">Name</label>
+        <input type="text" id="name" name="name" value="<?= htmlspecialchars($employee['name']); ?>" required>
 
-    <label>Department</label>
-    <select name="department" class="w-full border p-2 mb-3 rounded">
-      <?php foreach($departments as $d): ?>
-        <option value="<?= $d['id'] ?>" <?= $employee['department_id']==$d['id'] ? 'selected':'' ?>><?= $d['name'] ?></option>
-      <?php endforeach; ?>
-    </select>
+        <label for="email">Email</label>
+        <input type="email" id="email" name="email" value="<?= htmlspecialchars($employee['email']); ?>" required>
 
-    <label>Role</label>
-    <input type="text" name="role" value="<?= $employee['role'] ?>" class="w-full border p-2 mb-3 rounded">
+        <label for="phone">Phone</label>
+        <input type="text" id="phone" name="phone" value="<?= htmlspecialchars($employee['phone']); ?>">
 
-    <label>Date Joined</label>
-    <input type="date" name="date_joined" value="<?= $employee['date_joined'] ?>" class="w-full border p-2 mb-3 rounded">
+        <label for="department">Department</label>
+        <select id="department" name="department" required>
+          <?php foreach ($departments as $d): ?>
+            <option value="<?= $d['id']; ?>" <?= $employee['department_id'] == $d['id'] ? 'selected' : ''; ?>><?= htmlspecialchars($d['name']); ?></option>
+          <?php endforeach; ?>
+        </select>
 
-    <button type="submit" class="btn bg-green-500 text-white px-4 py-2 rounded">Update</button>
-  </form>
+        <label for="role">Role</label>
+        <input type="text" id="role" name="role" value="<?= htmlspecialchars($employee['role']); ?>">
+
+        <label for="date_joined">Date Joined</label>
+        <input type="date" id="date_joined" name="date_joined" value="<?= htmlspecialchars($employee['date_joined']); ?>">
+
+        <button type="submit">Update</button>
+      </form>
+    </section>
+  </main>
+
+  <footer>
+    <p>&copy; 2025 StaffTrack. All rights reserved.</p>
+  </footer>
 </body>
 </html>
